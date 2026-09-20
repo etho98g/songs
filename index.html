@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>A.S Music</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons (Premium Modern Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" type="image/png">
+    
+    <style>
+        :root {
+            --primary: #6366f1; /* Indigo 500 */
+            --primary-hover: #4f46e5; /* Indigo 600 */
+            --bg-base: #0f111a; /* Deep Charcoal / Blue-Gray */
+            --bg-surface: #1a1d2d; 
+            --glass-bg: rgba(26, 29, 45, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: #f8fafc;
+            overflow: hidden; /* Prevent body scroll */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Animated Subtle Gradient */
+        .bg-animated {
+            background: radial-gradient(circle at 10% 40%, rgba(49, 46, 129, 0.25), transparent 40%),
+                        radial-gradient(circle at 90% 60%, rgba(15, 23, 42, 0.4), transparent 40%);
+            background-color: var(--bg-base);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism & Surface */
+        .surface {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid var(--glass-border);
+            border-right: 1px solid var(--glass-border);
+        }
+
+        /* Custom Scrollbars & Utilities */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .pb-safe { padding-bottom: calc(var(--safe-area-bottom) + 80px); }
+        .mb-safe { margin-bottom: var(--safe-area-bottom); }
+        
+        .touch-target { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            height: 24px; /* Larger touch area */
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            margin: 0;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            height: 12px; width: 12px; border-radius: 50%;
+            background: #fff; cursor: pointer; -webkit-appearance: none;
+            margin-top: -4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: transform 0.15s ease, opacity 0.15s ease;
+            opacity: 0;
+        }
+        .group:hover input[type=range]::-webkit-slider-thumb,
+        input[type=range]:active::-webkit-slider-thumb { opacity: 1; transform: scale(1.3); }
+
+        .fade-in { animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .slide-up.active { transform: translateY(0); }
+
+        .hover-lift { transition: transform 0.2s, background 0.2s; }
+        .hover-lift:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05); }
+
+        @keyframes spinSlow { 100% { transform: rotate(360deg); } }
+        .spin-slow { animation: spinSlow 12s linear infinite; }
+        .spin-paused { animation-play-state: paused; }
+
+        .app-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-animated flex flex-col h-screen text-sm md:text-base selection:bg-indigo-500/30">
+
+    <!-- Loading Screen -->
+    <div id="app-loader" class="fixed inset-0 z-[99999] bg-[var(--bg-base)] flex flex-col items-center justify-center transition-opacity duration-500">
+        <img src="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" class="w-24 h-24 object-cover object-center rounded-full shadow-lg shadow-indigo-500/20 animate-pulse mb-6" style="aspect-ratio: 1/1;" alt="A.S Music Loading">
+        <div class="text-white font-bold tracking-widest text-lg">A.S MUSIC</div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- Desktop Sidebar -->
+        <aside class="hidden md:flex w-64 glass-panel flex-col h-full shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+            <div class="p-6 flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" alt="A.S Music Logo" class="w-10 h-10 rounded-full object-cover object-center shadow-lg shadow-indigo-500/20" style="aspect-ratio: 1/1;">
+                <h1 class="text-xl font-bold tracking-tight text-white">A.S Music</h1>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto hide-scrollbar px-4 py-2 space-y-6">
+                <!-- Modes -->
+                <div>
+                    <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2">Discovery</h2>
+                    <ul class="space-y-1">
+                        <li><button onclick="switchMode('online'); navigate('home')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left font-medium" data-view="home"><i class="ph ph-globe-hemisphere text-lg"></i> Play Online</button></li>
+                        <li><button onclick="switchMode('local'); navigate('local')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left font-medium" data-view="local"><i class="ph ph-folder-open text-lg"></i> Play Local</button></li>
+                    </ul>
+                </div>
+
+                <!-- GitHub Categories (Online Mode Only) -->
+                <div id="nav-categories-section">
+                    <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2 mt-6">GitHub Library</h2>
+                    <ul class="space-y-1">
+                        <li><button onclick="navigate('category', 'Qawwali')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="category" data-cat="Qawwali"><i class="ph ph-hands-praying text-lg"></i> Qawwali</button></li>
+                        <li><button onclick="navigate('category', 'Bhajan')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="category" data-cat="Bhajan"><i class="ph ph-om text-lg"></i> Bhajan</button></li>
+                        <li><button onclick="navigate('category', 'English')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="category" data-cat="English"><i class="ph ph-globe text-lg"></i> English</button></li>
+                        <li><button onclick="navigate('category', 'Hindi')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="category" data-cat="Hindi"><i class="ph ph-music-notes text-lg"></i> Hindi</button></li>
+                        <li><button onclick="navigate('category', 'Punjabi')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="category" data-cat="Punjabi"><i class="ph ph-guitar text-lg"></i> Punjabi</button></li>
+                    </ul>
+                </div>
+
+                <!-- Library -->
+                <div>
+                    <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2 mt-6">My Collection</h2>
+                    <ul class="space-y-1">
+                        <li><button onclick="navigate('favorites')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="favorites"><i class="ph-fill ph-heart text-indigo-400 text-lg"></i> Favorites</button></li>
+                        <li><button onclick="navigate('playlists')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left" data-view="playlists"><i class="ph ph-playlist text-lg"></i> Playlists</button></li>
+                        <li><button onclick="navigate('settings')" class="w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left mt-4" data-view="settings"><i class="ph ph-gear text-lg"></i> Settings</button></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="flex-1 flex flex-col relative z-10 h-full">
+            
+            <!-- Mobile Header & Desktop Search -->
+            <header class="h-[64px] md:h-[72px] px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-20 bg-[var(--bg-base)]/80 backdrop-blur-xl border-b border-white/5">
+                
+                <!-- Mobile Branding -->
+                <div class="md:hidden flex items-center gap-2 font-bold text-lg text-white">
+                    <img src="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" alt="A.S Music Logo" class="w-8 h-8 rounded-full object-cover object-center shadow-sm shadow-indigo-500/20" style="aspect-ratio: 1/1;">
+                    A.S Music
+                </div>
+
+                <!-- Global Search -->
+                <div class="flex items-center gap-4 flex-1 justify-end md:justify-start md:ml-4">
+                    <div class="relative group hidden md:block max-w-sm w-full">
+                        <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within:text-indigo-400 transition-colors"></i>
+                        <input type="text" id="global-search" placeholder="Search songs, artists..." class="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-11 pr-4 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all text-sm text-white placeholder-slate-500" onkeyup="handleSearchInput(event)">
+                    </div>
+                    
+                    <!-- Mobile Search/Settings Actions -->
+                    <button onclick="navigate('search')" class="md:hidden touch-target rounded-full bg-white/5 text-white hover:bg-white/10 transition-colors"><i class="ph ph-magnifying-glass text-xl"></i></button>
+                    <button onclick="navigate('settings')" class="md:hidden touch-target rounded-full text-slate-300 hover:text-white transition-colors"><i class="ph ph-gear text-xl"></i></button>
+                </div>
+            </header>
+
+            <!-- Dynamic Views Container -->
+            <div id="view-container" class="flex-1 overflow-y-auto hide-scrollbar p-4 md:p-8 pb-safe relative">
+                <!-- Content Injected via JavaScript -->
+            </div>
+            
+        </main>
+    </div>
+
+    <div class="hidden md:flex fixed bottom-0 left-0 right-0 h-24 glass-panel z-40 items-center px-6 justify-between border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] bg-[#131520]/95">
+        
+        <!-- Track Info -->
+        <div class="flex items-center gap-4 w-1/4 min-w-[250px]">
+            <div class="relative w-14 h-14 flex-shrink-0 group">
+                <img id="player-cover" src="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" onerror="this.src='https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png'; this.classList.add('object-cover','rounded-full'); this.classList.remove('rounded-md'); document.getElementById('player-cover-overlay').classList.add('rounded-full');" alt="Cover" class="w-full h-full object-cover rounded-full shadow-md spin-paused" style="aspect-ratio: 1/1;">
+                <div id="player-cover-overlay" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-[2px] rounded-full" onclick="openFullscreenPlayer()"><i class="ph ph-arrows-out-simple text-white text-xl"></i></div>
+            </div>
+            <div class="flex flex-col overflow-hidden">
+                <span id="player-title" class="font-semibold text-white truncate text-sm">Not Playing</span>
+                <span id="player-artist" class="text-xs text-slate-400 truncate mt-0.5">Select a track</span>
+            </div>
+            <button id="player-fav-btn" onclick="toggleFavoriteCurrent()" class="text-slate-500 hover:text-indigo-400 ml-auto transition-colors touch-target opacity-50 cursor-not-allowed" disabled><i class="ph ph-heart text-xl"></i></button>
+        </div>
+
+        <!-- Main Player Controls & Advanced Timeline -->
+        <div class="flex flex-col items-center flex-1 max-w-2xl px-8">
+            <div class="flex items-center gap-6 mb-1">
+                <button id="btn-shuffle" onclick="toggleShuffle()" class="text-slate-400 hover:text-white transition-colors touch-target"><i class="ph ph-shuffle text-xl"></i></button>
+                <button onclick="playPrev()" class="text-slate-300 hover:text-white transition-colors touch-target"><i class="ph-fill ph-skip-back text-2xl"></i></button>
+                
+                <button id="btn-play-pause" onclick="togglePlayPause()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-indigo-600 hover:scale-105 hover:bg-slate-200 transition-all shadow-[0_4px_14px_rgba(255,255,255,0.2)]">
+                    <i class="ph-fill ph-play text-xl ml-1"></i>
+                </button>
+                
+                <button onclick="playNext()" class="text-slate-300 hover:text-white transition-colors touch-target"><i class="ph-fill ph-skip-forward text-2xl"></i></button>
+                <button id="btn-repeat" onclick="toggleRepeat()" class="text-slate-400 hover:text-white transition-colors touch-target"><i class="ph ph-repeat text-xl"></i></button>
+            </div>
+            
+            <div class="w-full flex items-center gap-3 text-xs text-slate-400 font-medium tracking-wide">
+                <span id="time-current" class="w-10 text-right font-mono">0:00</span>
+                <div class="flex-1 relative group h-4 flex items-center">
+                    <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" aria-label="Seek timeline"
+                           oninput="handleSeekInput(this.value, false)" 
+                           onchange="handleSeekChange(this.value)">
+                    <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden absolute pointer-events-none top-1/2 -translate-y-1/2">
+                        <div id="progress-fill" class="h-full bg-indigo-500 rounded-full pointer-events-none" style="width: 0%"></div>
+                    </div>
+                </div>
+                <span id="time-total" class="w-10 font-mono">0:00</span>
+            </div>
+        </div>
+
+        <!-- Volume Controls -->
+        <div class="flex items-center justify-end gap-3 w-1/4 min-w-[200px]">
+            <button onclick="toggleMute()" class="text-slate-400 hover:text-white transition-colors touch-target"><i id="icon-volume" class="ph-fill ph-speaker-high text-xl"></i></button>
+            <div class="w-24 relative group h-4 flex items-center">
+                 <input type="range" id="volume-bar" min="0" max="1" step="0.01" value="1" aria-label="Volume" oninput="handleVolume(this.value)">
+                 <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden absolute pointer-events-none top-1/2 -translate-y-1/2">
+                    <div id="volume-fill" class="h-full bg-white rounded-full pointer-events-none" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-mini-player" class="md:hidden fixed bottom-[64px] left-2 right-2 h-14 bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-40 flex items-center px-3 gap-3 cursor-pointer hidden transform transition-transform mb-safe" onclick="openFullscreenPlayer()">
+        <!-- Mini Progress -->
+        <div class="absolute top-0 left-0 w-full h-0.5 bg-white/5 rounded-t-xl overflow-hidden">
+            <div id="m-mini-progress" class="h-full bg-indigo-500 w-0 transition-all duration-150"></div>
+        </div>
+        
+        <img id="m-mini-cover" src="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" onerror="this.src='https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png'; this.classList.add('object-cover','rounded-full'); this.classList.remove('rounded-md');" alt="Cover" class="w-10 h-10 rounded-full object-cover spin-paused shadow-sm" style="aspect-ratio: 1/1;">
+        <div class="flex-1 overflow-hidden">
+            <div id="m-mini-title" class="font-medium text-sm text-white truncate">Not Playing</div>
+            <div id="m-mini-artist" class="text-[11px] text-slate-400 truncate">Select a track</div>
+        </div>
+        <button id="m-mini-play" onclick="event.stopPropagation(); togglePlayPause()" class="touch-target text-white"><i class="ph-fill ph-play text-2xl"></i></button>
+        <button onclick="event.stopPropagation(); playNext()" class="touch-target text-slate-300 pr-1"><i class="ph-fill ph-skip-forward text-xl"></i></button>
+    </div>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-[64px] bg-[var(--bg-base)]/95 backdrop-blur-xl border-t border-white/5 z-30 flex items-center justify-around px-2 text-[10px] font-medium text-slate-400 pb-safe">
+        <button onclick="switchMode('online'); navigate('home')" class="nav-mobile-btn flex flex-col items-center gap-1 p-2 w-16 hover:text-white transition-colors" data-view="home">
+            <i class="ph ph-globe-hemisphere text-2xl"></i> <span>Online</span>
+        </button>
+        <button onclick="switchMode('local'); navigate('local')" class="nav-mobile-btn flex flex-col items-center gap-1 p-2 w-16 hover:text-white transition-colors" data-view="local">
+            <i class="ph ph-folder-open text-2xl"></i> <span>Local</span>
+        </button>
+        <button onclick="navigate('favorites')" class="nav-mobile-btn flex flex-col items-center gap-1 p-2 w-16 hover:text-white transition-colors" data-view="favorites">
+            <i class="ph ph-heart text-2xl"></i> <span>Favorites</span>
+        </button>
+        <button onclick="navigate('settings')" class="nav-mobile-btn flex flex-col items-center gap-1 p-2 w-16 hover:text-white transition-colors" data-view="settings">
+            <i class="ph ph-gear text-2xl"></i> <span>Settings</span>
+        </button>
+    </nav>
+
+    <div id="mobile-full-player" class="slide-up fixed inset-0 z-50 flex flex-col hidden items-center bg-gradient-to-b from-[#1a1c29] to-[#0a0b10]">
+        <!-- Header -->
+        <div class="w-full pt-10 pb-4 px-4 flex items-center justify-between shrink-0">
+            <button onclick="closeFullscreenPlayer()" class="touch-target bg-white/5 rounded-full hover:bg-white/10 transition-colors text-white"><i class="ph ph-caret-down text-2xl"></i></button>
+            <span class="text-xs font-bold tracking-widest text-slate-400" id="m-full-mode-text">ONLINE</span>
+            <div class="w-[44px]"></div> <!-- Spacer for center alignment -->
+        </div>
+
+        <!-- Artwork (Responsive constraints) -->
+        <div class="w-full flex justify-center items-center flex-1 px-8 py-4 shrink-0 min-h-[250px]">
+            <img id="m-full-cover" src="https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png" onerror="this.src='https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png'; this.classList.add('object-cover','rounded-full'); this.classList.remove('rounded-2xl');" alt="Cover" class="rounded-full object-cover shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10" style="width: min(80vw, 360px); aspect-ratio: 1/1;">
+        </div>
+
+        <!-- Info & Controls Container -->
+        <div class="w-full px-8 pb-12 flex flex-col shrink-0 max-w-md mx-auto mb-safe">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex flex-col overflow-hidden pr-4">
+                    <span id="m-full-title" class="font-bold text-2xl text-white truncate mb-1">Title</span>
+                    <span id="m-full-artist" class="text-indigo-400 text-sm truncate">Artist</span>
+                </div>
+                <button id="m-full-fav" onclick="toggleFavoriteCurrent()" class="text-slate-400 hover:text-indigo-400 transition-colors shrink-0 touch-target"><i class="ph ph-heart text-3xl"></i></button>
+            </div>
+
+            <!-- Mobile Advanced Timeline -->
+            <div class="w-full space-y-2 mb-8">
+                <div class="relative group h-8 flex items-center"> <!-- Taller touch target -->
+                    <input type="range" id="m-progress-bar" min="0" max="100" value="0" step="0.1" aria-label="Seek timeline"
+                           oninput="handleSeekInput(this.value, true)" 
+                           onchange="handleSeekChange(this.value)">
+                    <div class="h-1.5 w-full bg-white/20 rounded-full overflow-hidden absolute pointer-events-none top-1/2 -translate-y-1/2">
+                        <div id="m-progress-fill" class="h-full bg-indigo-500 rounded-full pointer-events-none" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs font-medium text-slate-400 tracking-wide font-mono px-1">
+                    <span id="m-time-current">0:00</span>
+                    <span id="m-time-total">0:00</span>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="flex items-center justify-between w-full">
+                <button id="m-btn-shuffle" onclick="toggleShuffle()" class="text-slate-400 touch-target"><i class="ph ph-shuffle text-2xl"></i></button>
+                <button onclick="playPrev()" class="text-white touch-target"><i class="ph-fill ph-skip-back text-4xl"></i></button>
+                <button id="m-btn-play-pause" onclick="togglePlayPause()" class="w-[72px] h-[72px] flex items-center justify-center rounded-full bg-white text-indigo-600 shadow-[0_4px_24px_rgba(255,255,255,0.2)] transform active:scale-95 transition-all">
+                    <i class="ph-fill ph-play text-4xl ml-2"></i>
+                </button>
+                <button onclick="playNext()" class="text-white touch-target"><i class="ph-fill ph-skip-forward text-4xl"></i></button>
+                <button id="m-btn-repeat" onclick="toggleRepeat()" class="text-slate-400 touch-target"><i class="ph ph-repeat text-2xl"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-4 md:top-8 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4 items-center"></div>
+
+    <div id="custom-modal" class="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+        <div class="bg-[var(--bg-surface)] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-200" id="custom-modal-content">
+            <h3 id="modal-title" class="text-lg font-bold text-white mb-2">Confirm</h3>
+            <p id="modal-desc" class="text-slate-300 text-sm mb-6">Are you sure you want to do this?</p>
+            <div class="flex items-center justify-end gap-3">
+                <button onclick="closeModal(false)" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-white/10 transition-colors">Cancel</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const APP_LOGO = 'https://raw.githubusercontent.com/etho98g/songs/main/Images/Music%20app%20logo.png';
+        const ITUNES_API_BASE = 'https://itunes.apple.com/search';
+        
+        // --- APP STATE ---
+        const AppState = {
+            mode: 'online', // 'online' | 'local'
+            currentView: 'home', // 'home' | 'search' | 'favorites' | 'category' | 'settings' | 'playlists'
+            activeCategory: '', 
+            
+            onlineData: { query: '', results: [] },
+            localData: { files: [], parsedTracks: [] },
+            
+            // GitHub Dynamics
+            categories: {
+                'Qawwali': { songs: [], loaded: false, loading: false, api: 'https://api.github.com/repos/etho98g/songs/contents/Qawwali' },
+                'Bhajan':  { songs: [], loaded: false, loading: false, api: 'https://api.github.com/repos/etho98g/songs/contents/Bhajan' },
+                'English': { songs: [], loaded: false, loading: false, api: 'https://api.github.com/repos/etho98g/songs/contents/English' },
+                'Hindi':   { songs: [], loaded: false, loading: false, api: 'https://api.github.com/repos/etho98g/songs/contents/Hindi' },
+                'Punjabi': { songs: [], loaded: false, loading: false, api: 'https://api.github.com/repos/etho98g/songs/contents/Punjabi' }
+            },
+            categorySearchQuery: '', 
+            
+            favorites: [], 
+            playlists: [], // Custom playlists feature
+            settings: { volume: 1, shuffle: false, repeat: 0 }, 
+            
+            audio: new Audio(),
+            currentTrack: null,
+            isPlaying: false,
+            
+            queue: [],
+            queueIndex: -1,
+            originalQueue: [],
+            
+            isDraggingSlider: false
+        };
+
+        let currentObjUrl = null; 
+
+        // --- STORAGE ---
+        function loadSettings() {
+            try {
+                const f = localStorage.getItem('asmusic_favs');
+                if (f) AppState.favorites = JSON.parse(f);
+                const s = localStorage.getItem('asmusic_settings');
+                if (s) {
+                    AppState.settings = { ...AppState.settings, ...JSON.parse(s) };
+                    AppState.audio.volume = AppState.settings.volume;
+                }
+                const p = localStorage.getItem('asmusic_playlists');
+                if (p) AppState.playlists = JSON.parse(p);
+            } catch (e) { console.error("Storage load error", e); }
+        }
+        function saveSettings() {
+            localStorage.setItem('asmusic_favs', JSON.stringify(AppState.favorites));
+            localStorage.setItem('asmusic_settings', JSON.stringify(AppState.settings));
+            localStorage.setItem('asmusic_playlists', JSON.stringify(AppState.playlists));
+        }
+
+        // --- CUSTOM UI: TOAST & MODAL ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let icon = 'ph-info';
+            let colors = 'bg-slate-800 border-slate-600';
+            if (type === 'success') { icon = 'ph-check-circle text-emerald-400'; colors = 'bg-slate-900 border-emerald-500/30'; }
+            if (type === 'error') { icon = 'ph-warning-circle text-red-400'; colors = 'bg-slate-900 border-red-500/30'; }
+            
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-full shadow-2xl border ${colors} text-white text-sm font-medium transition-all duration-300 transform -translate-y-4 opacity-0 pointer-events-auto backdrop-blur-md`;
+            toast.innerHTML = `<i class="ph-fill ${icon} text-lg"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => { toast.classList.remove('-translate-y-4', 'opacity-0'); });
+            
+            setTimeout(() => {
+                toast.classList.add('-translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        let modalCallback = null;
+        function showModal(title, desc, confirmText, callback, isDestructive = false) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-desc').textContent = desc;
+            const btn = document.getElementById('modal-confirm-btn');
+            btn.textContent = confirmText;
+            btn.className = `px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${isDestructive ? 'bg-red-600 hover:bg-red-500' : 'bg-indigo-600 hover:bg-indigo-500'}`;
+            
+            modalCallback = callback;
+            const modal = document.getElementById('custom-modal');
+            const content = document.getElementById('custom-modal-content');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            });
+        }
+        function closeModal(confirmed) {
+            const modal = document.getElementById('custom-modal');
+            const content = document.getElementById('custom-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                if (confirmed && modalCallback) modalCallback();
+                modalCallback = null;
+            }, 200);
+        }
+        document.getElementById('modal-confirm-btn').addEventListener('click', () => closeModal(true));
+
+        // --- NAVIGATION & VIEWS ---
+        function switchMode(mode) {
+            if (AppState.mode === mode) return;
+            AppState.mode = mode;
+            
+            const onlineBtn = document.getElementById('nav-mode-online');
+            if (onlineBtn) onlineBtn.className = mode === 'online' ? 'w-full nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left bg-indigo-500/10 text-indigo-400 font-medium border border-indigo-500/20' : 'w-full nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all text-left border border-transparent';
+            
+            const localBtn = document.getElementById('nav-mode-local');
+            if (localBtn) localBtn.className = mode === 'local' ? 'w-full nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left bg-indigo-500/10 text-indigo-400 font-medium border border-indigo-500/20' : 'w-full nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all text-left border border-transparent';
+            
+            const catSection = document.getElementById('nav-categories-section');
+            if (catSection) catSection.style.display = mode === 'online' ? 'block' : 'none';
+
+            const searchInput = document.getElementById('global-search');
+            if(searchInput) searchInput.placeholder = mode === 'online' ? "Search online music..." : "Search local files...";
+            
+            showToast(`Switched to ${mode === 'online' ? 'Online' : 'Local'} Library`, 'info');
+            updateNavHighlights();
+        }
+
+        function navigate(view, category = '') {
+            AppState.currentView = view;
+            if (category) {
+                AppState.activeCategory = category;
+                AppState.categorySearchQuery = ''; 
+            }
+            if (view !== 'search') {
+                const globalS = document.getElementById('global-search');
+                if(globalS) globalS.value = '';
+            }
+            updateNavHighlights();
+            renderView(view);
+        }
+
+        function updateNavHighlights() {
+            // Desktop
+            document.querySelectorAll('.nav-view-btn').forEach(btn => {
+                let isActive = false;
+                if (AppState.currentView === 'category') isActive = btn.dataset.view === 'category' && btn.dataset.cat === AppState.activeCategory;
+                else isActive = btn.dataset.view === AppState.currentView && !btn.dataset.cat;
+                btn.className = isActive ? 'w-full nav-view-btn flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left bg-white/10 text-white font-medium' : 'w-full nav-view-btn flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors text-left font-medium';
+            });
+            // Mobile
+            document.querySelectorAll('.nav-mobile-btn').forEach(btn => {
+                let isActive = btn.dataset.view === AppState.currentView;
+                btn.className = isActive ? 'nav-mobile-btn flex flex-col items-center gap-1 p-2 w-16 text-indigo-400 transition-colors' : 'nav-mobile-btn flex flex-col items-center gap-1 p-2 w-16 text-slate-400 hover:text-white transition-colors';
+            });
+        }
+
+        function getCategoryCover(cat) {
+            return APP_LOGO;
+        }
+
+        function renderSkeletons() {
+            return Array(5).fill(0).map(() => `
+                <div class="flex items-center gap-3 p-3 border-b border-white/5 animate-pulse">
+                    <div class="w-10 h-10 bg-white/5 rounded shrink-0"></div>
+                    <div class="flex flex-col flex-1 gap-2">
+                        <div class="h-3 w-3/4 bg-white/5 rounded"></div>
+                        <div class="h-2 w-1/2 bg-white/5 rounded"></div>
+                    </div>
+                    <div class="w-8 h-8 bg-white/5 rounded-full"></div>
+                </div>
+            `).join('');
+        }
+
+        function renderEmptyState(icon, title, subtitle) {
+            return `
+                <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+                    <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
+                        <i class="ph ${icon} text-4xl text-slate-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">${title}</h3>
+                    <p class="text-slate-400 max-w-md text-sm">${subtitle}</p>
+                </div>
+            `;
+        }
+
+        function renderView(view) {
+            const container = document.getElementById('view-container');
+            let html = '';
+
+            if (view === 'home') {
+                // Mobile Horizontal Categories
+                const mobileCategories = `
+                    <div class="md:hidden mb-8">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Explore Categories</h3>
+                            <div class="flex overflow-x-auto hide-scrollbar gap-4 pb-2 snap-x">
+                                ${Object.keys(AppState.categories).map(cat => `
+                                    <div class="snap-start shrink-0 w-36 h-32 rounded-xl relative overflow-hidden bg-slate-800 touch-target shadow-lg border border-white/5 flex flex-col items-center justify-center" onclick="navigate('category', '${cat}')">
+                                        <img src="${getCategoryCover(cat)}" class="w-16 h-16 rounded-full object-cover object-center shadow-md mb-2" style="aspect-ratio: 1/1;">
+                                        <span class="text-sm font-bold text-white">${cat}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+
+                    html = `
+                        <div class="fade-in max-w-5xl mx-auto">
+                            <div class="flex items-center gap-4 mb-6">
+                                <img src="${APP_LOGO}" class="w-12 h-12 rounded-full object-cover object-center shadow-lg hidden md:block" style="aspect-ratio: 1/1;" alt="Logo">
+                                <div>
+                                    <h2 class="text-2xl md:text-3xl font-bold mb-1 tracking-tight text-white">Discover <span class="text-indigo-400">Online</span></h2>
+                                    <p class="text-slate-400 text-sm">Stream millions of previews directly from the web.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Card (Mobile focuses to search view) -->
+                            <div class="bg-gradient-to-br from-indigo-900/40 to-[#1a1d2d]/80 border border-indigo-500/20 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer hover:border-indigo-500/40 transition-colors" onclick="document.getElementById('global-search')?.focus(); navigate('search')">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white mb-1">Global Music Search</h3>
+                                    <p class="text-slate-400 text-sm">Find any artist, album, or track instantly.</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0"><i class="ph ph-magnifying-glass text-xl"></i></div>
+                            </div>
+
+                            ${mobileCategories}
+
+                            <!-- Desktop Categories Grid -->
+                            <div class="hidden md:block">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Featured Collections</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                    ${Object.keys(AppState.categories).map(cat => `
+                                    <div class="bg-white/5 border border-white/5 rounded-2xl overflow-hidden hover-lift cursor-pointer group shadow-lg" onclick="navigate('category', '${cat}')">
+                                        <div class="h-36 relative overflow-hidden bg-slate-800 flex flex-col items-center justify-center p-4">
+                                            <img src="${getCategoryCover(cat)}" class="w-20 h-20 rounded-full object-cover object-center shadow-lg group-hover:scale-110 transition-transform duration-500 mb-3" style="aspect-ratio: 1/1;">
+                                            <h4 class="text-base font-bold text-white">${cat}</h4>
+                                    </div>
+                                </div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } 
+            else if (view === 'local') {
+                html = `
+                    <div class="fade-in max-w-5xl mx-auto">
+                        <div class="flex items-center gap-4 mb-6">
+                            <img src="${APP_LOGO}" class="app-logo shadow-lg hidden md:block" alt="Logo">
+                            <div>
+                                <h2 class="text-2xl md:text-3xl font-bold mb-1 tracking-tight text-white">Your <span class="text-indigo-400">Local Files</span></h2>
+                                <p class="text-slate-400 text-sm">Play audio files directly from your device storage.</p>
+                            </div>
+                        </div>
+                        
+                        ${AppState.localData.parsedTracks.length === 0 ? `
+                            <div class="flex flex-col items-center justify-center py-16 px-4 text-center bg-white/5 rounded-3xl border border-white/5 border-dashed">
+                                <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4"><i class="ph ph-folder-open text-3xl text-slate-400"></i></div>
+                                <h3 class="text-lg font-bold text-white mb-2">No Local Music</h3>
+                                <p class="text-slate-400 max-w-sm mb-6 text-sm">Select a folder or music files to start playing.</p>
+                                <div class="flex flex-col sm:flex-row gap-3 items-center justify-center w-full">
+                                    <input type="file" id="folder-upload" webkitdirectory multiple class="hidden" onchange="handleLocalFiles(event)">
+                                    <button onclick="document.getElementById('folder-upload').click()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                                        <i class="ph ph-folder-plus text-lg"></i> Select Music Folder
+                                    </button>
+                                    <input type="file" id="file-upload" accept="audio/*" multiple class="hidden" onchange="handleLocalFiles(event)">
+                                    <button onclick="document.getElementById('file-upload').click()" class="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg text-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                                        <i class="ph ph-file-audio text-lg"></i> Select Files
+                                    </button>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-8 max-w-sm">Note: For security reasons, browsers require you to re-select your local folder after a page refresh. Your files remain on your device and are never uploaded.</p>
+                            </div>
+                        ` : `
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center"><i class="ph-fill ph-files text-xl"></i></div>
+                                    <div>
+                                        <h3 class="font-bold text-white text-sm">Local Library Ready</h3>
+                                        <p class="text-xs text-slate-400">${AppState.localData.parsedTracks.length} tracks loaded</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 w-full sm:w-auto">
+                                    <button onclick="playContext(AppState.localData.parsedTracks, 0)" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"><i class="ph-fill ph-play"></i> Play All</button>
+                                    <input type="file" id="folder-upload-change" webkitdirectory multiple class="hidden" onchange="handleLocalFiles(event)">
+                                    <button onclick="document.getElementById('folder-upload-change').click()" class="flex-1 sm:flex-none bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"><i class="ph ph-arrows-clockwise"></i> Change</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-4 px-2">Note: Library will reset upon page refresh due to browser security policies.</p>
+                            ${renderTrackList(AppState.localData.parsedTracks)}
+                        `}
+                    </div>
+                `;
+            }
+            else if (view === 'search') {
+                html = `
+                    <div class="fade-in max-w-4xl mx-auto mb-6 flex flex-col h-full">
+                        <div class="relative group md:hidden mb-4 shrink-0">
+                            <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                            <input type="text" id="mobile-search" placeholder="Search ${AppState.mode}..." class="w-full bg-[var(--bg-surface)] border border-white/10 rounded-full py-3 pl-11 pr-10 focus:outline-none focus:border-indigo-500/50 text-white shadow-lg transition-all text-sm" onkeyup="handleSearchInput(event, true)">
+                            <button onclick="document.getElementById('mobile-search').value=''; handleSearchInput({target:{value:''}})" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 touch-target w-8 h-8"><i class="ph ph-x"></i></button>
+                        </div>
+                        <h2 class="text-lg font-bold mb-4 text-white hidden md:flex items-center gap-2"><i class="ph ph-magnifying-glass text-indigo-400"></i> Search Results</h2>
+                        <div id="search-results-area" class="flex-1 overflow-y-auto hide-scrollbar pb-4">
+                            ${renderEmptyState('ph-keyboard', 'Search Library', `Start typing to search ${AppState.mode === 'online' ? 'Apple Music' : 'your local files'}...`)}
+                        </div>
+                    </div>
+                `;
+            }
+            else if (view === 'category') {
+                const catName = AppState.activeCategory;
+                const catData = AppState.categories[catName];
+                
+                if (!catData.loaded && !catData.loading) fetchCategorySongs(catName);
+
+                let songs = catData.songs;
+                if (AppState.categorySearchQuery) {
+                    const q = AppState.categorySearchQuery.toLowerCase();
+                    songs = songs.filter(s => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q));
+                }
+
+                let content = '';
+                if (catData.loading) {
+                    content = `<div class="mt-4">${renderSkeletons()}</div>`;
+                } else if (catData.songs.length === 0) {
+                    content = renderEmptyState('ph-music-notes-simple', 'No songs found', 'Upload audio files to this GitHub folder and refresh.');
+                } else {
+                    content = `
+                        <div class="flex items-center justify-between mb-4 mt-6">
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">${songs.length} Track${songs.length !== 1 ? 's' : ''}</div>
+                            <div class="relative w-48 hidden md:block">
+                                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="Filter..." class="w-full bg-black/20 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 focus:outline-none focus:border-indigo-500/50 text-white text-xs transition-all" value="${AppState.categorySearchQuery}" oninput="AppState.categorySearchQuery = this.value; renderView('category')">
+                            </div>
+                        </div>
+                        <div class="border-t border-white/5">
+                            ${songs.length > 0 ? renderTrackList(songs) : '<div class="py-10 text-center text-slate-500 text-sm">No matching tracks.</div>'}
+                        </div>
+                    `;
+                }
+
+                html = `
+                    <div class="fade-in max-w-5xl mx-auto">
+                        <button onclick="navigate('home')" class="text-slate-400 hover:text-white mb-4 flex items-center gap-1 text-sm transition-colors touch-target -ml-2 px-2"><i class="ph ph-arrow-left"></i> Back</button>
+                        
+                        <div class="flex flex-col md:flex-row items-center md:items-end gap-6 mb-6 text-center md:text-left bg-gradient-to-t from-white/5 to-transparent p-6 rounded-2xl border border-white/5">
+                            <div class="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden shadow-2xl shrink-0 mx-auto md:mx-0">
+                                <img src="${getCategoryCover(catName)}" class="w-full h-full object-cover object-center" style="aspect-ratio: 1/1;">
+                            </div>
+                            <div class="flex-1 w-full">
+                                <span class="text-[10px] font-bold tracking-widest text-indigo-400 uppercase mb-1 block">GitHub Collection</span>
+                                <h2 class="text-3xl md:text-4xl font-bold mb-2 tracking-tight text-white">${catName}</h2>
+                                <p class="text-slate-400 mb-6 text-sm">Dynamically loaded from public repository.</p>
+                                <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                    <button onclick="playContext(AppState.categories['${catName}'].songs, 0)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-full text-sm font-medium transition-all shadow-lg flex items-center gap-2 ${catData.songs.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${catData.songs.length === 0 ? 'disabled' : ''}><i class="ph-fill ph-play text-lg"></i> Play All</button>
+                                    <button onclick="forceRefreshCategory('${catName}')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-2"><i class="ph ph-arrows-clockwise text-lg"></i> Refresh</button>
+                                </div>
+                            </div>
+                        </div>
+                        ${content}
+                    </div>
+                `;
+            }
+            else if (view === 'favorites') {
+                const filteredFavs = AppState.favorites.filter(f => f.mode === AppState.mode);
+                html = `
+                    <div class="fade-in max-w-5xl mx-auto">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center"><i class="ph-fill ph-heart text-xl"></i></div>
+                            <h2 class="text-2xl font-bold tracking-tight text-white">Favorites <span class="text-xs font-normal text-slate-400 ml-2 bg-white/5 px-2 py-0.5 rounded-md uppercase">${AppState.mode}</span></h2>
+                        </div>
+                        ${filteredFavs.length === 0 ? renderEmptyState('ph-heart-break', 'No favorites yet', 'Like songs in this mode to see them here.') : renderTrackList(filteredFavs, true)}
+                    </div>
+                `;
+            }
+            else if (view === 'playlists') {
+                html = `
+                    <div class="fade-in max-w-5xl mx-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="ph-fill ph-playlist text-xl"></i></div>
+                                <h2 class="text-2xl font-bold tracking-tight text-white">Playlists</h2>
+                            </div>
+                            <button onclick="showToast('Playlist creation coming soon!', 'info')" class="text-sm bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white font-medium transition-colors"><i class="ph ph-plus mr-1"></i> New</button>
+                        </div>
+                        ${renderEmptyState('ph-playlist', 'No Playlists', 'Create custom playlists to organize your favorite tracks.')}
+                    </div>
+                `;
+            }
+            else if (view === 'settings') {
+                html = `
+                    <div class="fade-in max-w-2xl mx-auto">
+                        <h2 class="text-2xl font-bold tracking-tight text-white mb-6">Settings</h2>
+                        
+                        <div class="space-y-6">
+                            <div class="bg-[var(--bg-surface)] border border-white/5 rounded-2xl p-5 shadow-lg">
+                                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Data Management</h3>
+                                <ul class="space-y-3">
+                                    <li class="flex items-center justify-between">
+                                        <div><div class="text-white font-medium">Clear Favorites</div><div class="text-xs text-slate-500">Remove all liked songs</div></div>
+                                        <button onclick="showModal('Clear Favorites', 'This will remove all saved favorites across both modes. Cannot be undone.', 'Clear Data', () => { AppState.favorites = []; saveSettings(); showToast('Favorites cleared', 'success'); }, true)" class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors">Clear</button>
+                                    </li>
+                                    <li class="flex items-center justify-between">
+                                        <div><div class="text-white font-medium">Reset Application</div><div class="text-xs text-slate-500">Clear all local storage and settings</div></div>
+                                        <button onclick="showModal('Reset App', 'This will wipe all preferences, favorites, and playlists permanently.', 'Reset All', () => { localStorage.clear(); location.reload(); }, true)" class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors">Reset</button>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-[var(--bg-surface)] border border-white/5 rounded-2xl p-5 shadow-lg">
+                                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Support & Feedback</h3>
+                                <div class="space-y-4">
+                                    <div class="flex flex-col gap-3 text-sm text-slate-300 bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <p class="font-medium text-white mb-1">Contact Support directly:</p>
+                                        <a href="mailto:aryansharma98@gmail.com" class="flex items-center gap-3 hover:text-indigo-400 transition-colors"><i class="ph-fill ph-envelope text-lg text-indigo-400"></i> aryansharma98@gmail.com</a>
+                                        <a href="mailto:etho98g@gmail.com" class="flex items-center gap-3 hover:text-indigo-400 transition-colors"><i class="ph-fill ph-envelope text-lg text-indigo-400"></i> etho98g@gmail.com</a>
+                                    </div>
+                                    <form onsubmit="handleFeedbackSubmit(event)" class="space-y-3 mt-4 border-t border-white/5 pt-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <input type="text" id="feedback-name" placeholder="Name (optional)" class="w-full bg-black/20 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-colors">
+                                            <input type="email" id="feedback-email" placeholder="Email (optional)" class="w-full bg-black/20 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-colors">
+                                        </div>
+                                        <textarea id="feedback-msg" placeholder="Your feedback or message..." required rows="4" class="w-full bg-black/20 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-colors resize-none"></textarea>
+                                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-lg flex items-center justify-center gap-2"><i class="ph ph-paper-plane-right text-lg"></i> Send Feedback</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="bg-[var(--bg-surface)] border border-white/5 rounded-2xl p-5 shadow-lg text-center">
+                                <i class="ph-fill ph-music-notes-simple text-3xl text-indigo-400 mb-2"></i>
+                                <h3 class="font-bold text-white">A.S Music v2.0</h3>
+                                <p class="text-xs text-slate-400 mt-1">A modern local & streaming music player.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderTrackList(tracks, isStored = false) {
+            return `
+                <div class="flex flex-col border-t border-white/5 mt-2">
+                    ${tracks.map((t, idx) => {
+                        const meta = isStored ? t : extractMeta(t);
+                        const isFav = AppState.favorites.some(f => f.id === meta.id && f.mode === meta.mode);
+                        const isActive = (AppState.currentTrack && AppState.currentTrack.id === meta.id);
+                        
+                        // Encoded string to safely pass object via inline onclick
+                        const encodedMeta = encodeURIComponent(JSON.stringify(meta));
+                        const isLogo = !meta.cover || meta.cover === APP_LOGO;
+                        
+                        return `
+                        <div class="group flex items-center gap-3 p-2.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 rounded-lg mt-1 cursor-pointer ${isActive ? 'bg-indigo-500/10' : ''}" onclick="playContextStr('${encodedMeta}', ${idx})">
+                            
+                            <!-- Artwork -->
+                            <div class="relative w-11 h-11 shrink-0 overflow-hidden shadow-sm ${isLogo ? 'rounded-full' : 'rounded-md bg-slate-800 border border-white/10'}">
+                                <img src="${meta.cover || APP_LOGO}" onerror="this.src='${APP_LOGO}'; this.parentElement.classList.add('rounded-full'); this.parentElement.classList.remove('rounded-md', 'bg-slate-800', 'border'); this.classList.add('object-cover', 'rounded-full');" class="w-full h-full object-cover ${isLogo ? 'rounded-full' : ''}" style="aspect-ratio: 1/1;">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 md:opacity-0 ${isActive ? '!opacity-100 bg-black/60' : ''} transition-opacity ${isLogo ? 'rounded-full' : ''}">
+                                    <i class="ph-fill ph-play text-white text-lg ${isActive ? 'text-indigo-400' : ''}"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Info -->
+                            <div class="flex flex-col flex-1 overflow-hidden">
+                                <span class="text-sm font-medium truncate ${isActive ? 'text-indigo-400' : 'text-white'}">${meta.title}</span>
+                                <span class="text-[11px] text-slate-400 truncate mt-0.5">${meta.artist}</span>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex items-center gap-1 shrink-0 md:opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation()">
+                                <button onclick="toggleFavoriteId('${meta.id}', '${encodedMeta}')" class="touch-target hover:bg-white/10 rounded-full transition-colors">
+                                    <i class="${isFav ? 'ph-fill ph-heart text-rose-500' : 'ph ph-heart text-slate-400 hover:text-white'} text-lg"></i>
+                                </button>
+                                <button onclick="showToast('Added to queue')" class="touch-target hover:bg-white/10 rounded-full transition-colors hidden md:inline-flex">
+                                    <i class="ph ph-plus text-slate-400 hover:text-white text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `}).join('')}
+                </div>
+            `;
+        }
+
+        function extractMeta(rawTrack) {
+            if (rawTrack.category && Object.keys(AppState.categories).includes(rawTrack.category)) {
+                return { id: rawTrack.id, mode: 'online', title: rawTrack.title, artist: rawTrack.artist, cover: rawTrack.cover, url: rawTrack.url, raw: rawTrack };
+            }
+            if (AppState.mode === 'online') {
+                return {
+                    id: rawTrack.trackId?.toString(), mode: 'online', title: rawTrack.trackName || 'Unknown', artist: rawTrack.artistName || 'Unknown',
+                    cover: rawTrack.artworkUrl100 ? rawTrack.artworkUrl100.replace('100x100', '300x300') : APP_LOGO, url: rawTrack.previewUrl, raw: rawTrack
+                };
+            } else {
+                return { id: rawTrack.id, mode: 'local', title: rawTrack.title, artist: rawTrack.artist, cover: APP_LOGO, raw: rawTrack };
+            }
+        }
+
+        let searchTimeout = null;
+        function handleSearchInput(e, isMobile = false) {
+            const query = e.target.value.trim();
+            clearTimeout(searchTimeout);
+            e.stopPropagation();
+
+            searchTimeout = setTimeout(() => {
+                if (AppState.mode === 'local') executeSearch(query);
+                else if (query.length > 2) executeSearch(query);
+                else if (query.length === 0) {
+                    const c = document.getElementById('search-results-area');
+                    if(c) c.innerHTML = renderEmptyState('ph-keyboard', 'Search Library', `Start typing to search ${AppState.mode === 'online' ? 'Apple Music' : 'your local files'}...`);
+                }
+            }, 500);
+        }
+
+        async function executeSearch(query) {
+            if (AppState.currentView !== 'search') navigate('search');
+            const container = document.getElementById('search-results-area');
+            if(!container) return;
+            if (!query) { container.innerHTML = ''; return; }
+
+            container.innerHTML = `<div class="mt-4">${renderSkeletons()}</div>`;
+
+            if (AppState.mode === 'online') {
+                if (!navigator.onLine) {
+                    container.innerHTML = renderEmptyState('ph-wifi-slash', 'Offline', 'You need an internet connection to search online.');
+                    return;
+                }
+                try {
+                    const res = await fetch(`${ITUNES_API_BASE}?term=${encodeURIComponent(query)}&media=music&limit=25`);
+                    if (!res.ok) throw new Error("API Error");
+                    const data = await res.json();
+                    AppState.onlineData.results = data.results.filter(t => t.previewUrl);
+                    
+                    if (AppState.onlineData.results.length === 0) container.innerHTML = renderEmptyState('ph-smiley-sad', 'No Results', `No tracks found for "${query}"`);
+                    else container.innerHTML = renderTrackList(AppState.onlineData.results);
+                } catch (e) {
+                    container.innerHTML = renderEmptyState('ph-warning-circle', 'Search Failed', 'Unable to reach the search server.');
+                }
+            } else {
+                const q = query.toLowerCase();
+                const results = AppState.localData.parsedTracks.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+                if (results.length === 0) container.innerHTML = renderEmptyState('ph-smiley-sad', 'No Results', `No local files match "${query}"`);
+                else container.innerHTML = renderTrackList(results);
+            }
+        }
+
+        async function fetchCategorySongs(categoryName) {
+            const cat = AppState.categories[categoryName];
+            if (cat.loading) return;
+            cat.loading = true;
+            if (AppState.currentView === 'category' && AppState.activeCategory === categoryName) renderView('category');
+            
+            try {
+                const res = await fetch(cat.api);
+                if (!res.ok) throw new Error("GitHub API Network Error");
+                const data = await res.json();
+                
+                const validExts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
+                cat.songs = data
+                    .filter(f => f.type === 'file' && validExts.some(ext => f.name.toLowerCase().endsWith(ext)))
+                    .map(f => {
+                        let cleanName = decodeURIComponent(f.name).replace(/\.[^/.]+$/, "");
+                        let artist = categoryName + " Collection";
+                        let title = cleanName;
+                        
+                        if (cleanName.includes('_')) {
+                            const parts = cleanName.split('_').map(p => p.trim());
+                            title = parts[0]; if (parts.length > 1) artist = parts[1];
+                        } else if (cleanName.includes('-')) {
+                            const parts = cleanName.split('-').map(p => p.trim());
+                            artist = parts[0]; title = parts.slice(1).join('-').trim();
+                        }
+                        
+                        return {
+                            id: f.sha, title: title, artist: artist, category: categoryName, mode: "online",
+                            cover: getCategoryCover(categoryName), url: f.download_url
+                        };
+                    });
+                cat.loaded = true;
+            } catch (e) {
+                console.error(e);
+                showToast(`Unable to load ${categoryName} songs.`, "error");
+            } finally {
+                cat.loading = false;
+                if (AppState.currentView === 'category' && AppState.activeCategory === categoryName) renderView('category');
+            }
+        }
+        function forceRefreshCategory(categoryName) {
+            AppState.categories[categoryName].loaded = false;
+            fetchCategorySongs(categoryName);
+        }
+
+        function handleLocalFiles(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            let added = 0;
+            AppState.localData.files = []; AppState.localData.parsedTracks = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const f = files[i];
+                if (f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|ogg|flac)$/i)) {
+                    let artist = "Local File", title = f.name.replace(/\.[^/.]+$/, "");
+                    if (title.includes('-')) {
+                        const parts = title.split('-');
+                        artist = parts[0].trim(); title = parts.slice(1).join('-').trim();
+                    }
+                    AppState.localData.files.push(f);
+                    AppState.localData.parsedTracks.push({
+                        id: `loc_${f.size}_${f.lastModified}_${i}`, title: title, artist: artist, file: f
+                    });
+                    added++;
+                }
+            }
+            if (added > 0) {
+                showToast(`Loaded ${added} local tracks`, 'success');
+                if (AppState.currentView !== 'local') navigate('local'); else renderView('local');
+            } else {
+                showToast("No supported audio files found.", "error");
+            }
+        }
+
+        function playContextStr(encodedMeta, reqIndex) {
+            const meta = JSON.parse(decodeURIComponent(encodedMeta));
+            let context = [];
+            
+            if (AppState.currentView === 'local') context = AppState.localData.parsedTracks;
+            else if (AppState.currentView === 'category') context = AppState.categories[AppState.activeCategory].songs;
+            else if (AppState.currentView === 'search' && AppState.mode === 'online') context = AppState.onlineData.results;
+            else if (AppState.currentView === 'search' && AppState.mode === 'local') {
+                const q = (document.getElementById('global-search')?.value || document.getElementById('mobile-search')?.value || '').toLowerCase();
+                context = AppState.localData.parsedTracks.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+            }
+            else if (AppState.currentView === 'favorites') context = AppState.favorites.filter(f => f.mode === AppState.mode);
+
+            if (context.length === 0) context = [meta];
+            
+            let actualIndex = context.findIndex(t => ('mode' in t ? t.id : extractMeta(t).id) === meta.id);
+            if(actualIndex === -1) actualIndex = 0;
+            
+            playContext(context, actualIndex);
+        }
+
+        function playContext(trackArray, startIndex = 0) {
+            if (!trackArray || trackArray.length === 0) return;
+            AppState.queue = trackArray.map(t => 'mode' in t ? t : extractMeta(t));
+            AppState.originalQueue = [...AppState.queue];
+            
+            if (AppState.settings.shuffle) { doShuffleQueue(startIndex); startIndex = 0; }
+            AppState.queueIndex = startIndex;
+            playQueueIndex();
+        }
+
+        async function playQueueIndex() {
+            if (AppState.queueIndex < 0 || AppState.queueIndex >= AppState.queue.length) return;
+            
+            const meta = AppState.queue[AppState.queueIndex];
+            AppState.currentTrack = meta;
+            if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
+
+            try {
+                if (meta.mode === 'online') {
+                    AppState.audio.src = meta.url;
+                } else {
+                    let f = meta.raw?.file || AppState.localData.parsedTracks.find(t => t.id === meta.id)?.file;
+                    if(!f) throw new Error("File missing");
+                    currentObjUrl = URL.createObjectURL(f);
+                    AppState.audio.src = currentObjUrl;
+                }
+
+                await AppState.audio.play();
+                AppState.isPlaying = true;
+                
+                updatePlayerUI();
+                if(document.getElementById('view-container')) renderView(AppState.currentView);
+            } catch (e) {
+                if (e.name === 'AbortError') return;
+                showToast("Unable to play track.", "error");
+                AppState.isPlaying = false;
+                updatePlayPauseIcons();
+                setTimeout(playNext, 1500); 
+            }
+        }
+
+        function togglePlayPause() {
+            if (!AppState.currentTrack) return;
+            if (AppState.isPlaying) { AppState.audio.pause(); AppState.isPlaying = false; } 
+            else { 
+                const p = AppState.audio.play();
+                if (p !== undefined) p.catch(e => { if (e.name !== 'AbortError') console.error(e); });
+                AppState.isPlaying = true; 
+            }
+            updatePlayPauseIcons();
+            updateCoverAnimation();
+        }
+
+        function playNext() {
+            if (AppState.queue.length === 0) return;
+            AppState.queueIndex++;
+            if (AppState.queueIndex >= AppState.queue.length) {
+                if (AppState.settings.repeat === 1) AppState.queueIndex = 0;
+                else { AppState.queueIndex--; AppState.isPlaying = false; updatePlayPauseIcons(); updateCoverAnimation(); return; }
+            }
+            playQueueIndex();
+        }
+
+        function playPrev() {
+            if (AppState.queue.length === 0) return;
+            if (AppState.audio.currentTime > 3) { AppState.audio.currentTime = 0; return; }
+            AppState.queueIndex--;
+            if (AppState.queueIndex < 0) AppState.queueIndex = AppState.settings.repeat === 1 ? AppState.queue.length - 1 : 0;
+            playQueueIndex();
+        }
+
+        function formatTime(s) {
+            if (isNaN(s) || !isFinite(s)) return "0:00";
+            const min = Math.floor(s / 60); const sec = Math.floor(s % 60);
+            return `${min}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        AppState.audio.addEventListener('timeupdate', () => {
+            const curr = AppState.audio.currentTime; const dur = AppState.audio.duration;
+            if (!dur || isNaN(dur)) return;
+            const percentage = (curr / dur) * 100;
+            
+            // Mobile Mini-Player Progress
+            const miniProg = document.getElementById('m-mini-progress');
+            if(miniProg) miniProg.style.width = percentage + '%';
+
+            if (!AppState.isDraggingSlider) {
+                document.getElementById('progress-bar').value = percentage;
+                document.getElementById('progress-fill').style.width = percentage + '%';
+                document.getElementById('time-current').textContent = formatTime(curr);
+                
+                document.getElementById('m-progress-bar').value = percentage;
+                document.getElementById('m-progress-fill').style.width = percentage + '%';
+                document.getElementById('m-time-current').textContent = formatTime(curr);
+            }
+        });
+
+        AppState.audio.addEventListener('loadedmetadata', () => {
+            const dur = AppState.audio.duration;
+            document.getElementById('time-total').textContent = formatTime(dur);
+            document.getElementById('m-time-total').textContent = formatTime(dur);
+            ['progress-bar', 'm-progress-bar'].forEach(id => document.getElementById(id).value = 0);
+            ['progress-fill', 'm-progress-fill', 'm-mini-progress'].forEach(id => {
+                const el = document.getElementById(id); if(el) el.style.width = '0%';
+            });
+        });
+
+        AppState.audio.addEventListener('ended', () => {
+            if (AppState.settings.repeat === 2) { 
+                AppState.audio.currentTime = 0; 
+                const p = AppState.audio.play();
+                if(p) p.catch(e => { if (e.name !== 'AbortError') console.error(e); });
+            } 
+            else playNext();
+        });
+
+        function handleSeekInput(val, isMobile) {
+            AppState.isDraggingSlider = true;
+            if (AppState.audio.duration) {
+                const previewTime = AppState.audio.duration * (val / 100);
+                if (isMobile) {
+                    document.getElementById('m-progress-fill').style.width = val + '%';
+                    document.getElementById('m-time-current').textContent = formatTime(previewTime);
+                } else {
+                    document.getElementById('progress-fill').style.width = val + '%';
+                    document.getElementById('time-current').textContent = formatTime(previewTime);
+                }
+            }
+        }
+
+        function handleSeekChange(val) {
+            if (AppState.audio.duration) AppState.audio.currentTime = AppState.audio.duration * (val / 100);
+            AppState.isDraggingSlider = false;
+        }
+
+        function updatePlayerUI() {
+            const t = AppState.currentTrack;
+            if(!t) return;
+            const cover = t.cover || APP_LOGO; 
+            
+            ['player-cover', 'm-mini-cover', 'm-full-cover'].forEach(id => { 
+                const el = document.getElementById(id); 
+                if(el) {
+                    el.src = cover; 
+                    const overlayId = id === 'player-cover' ? 'player-cover-overlay' : null;
+                    const overlay = overlayId ? document.getElementById(overlayId) : null;
+                    
+                    if(cover === APP_LOGO) {
+                        el.classList.add('object-cover', 'rounded-full');
+                        el.classList.remove('rounded-2xl', 'rounded-md', 'rounded-lg');
+                        if(overlay) overlay.classList.add('rounded-full');
+                    } else {
+                        el.classList.add('object-cover');
+                        el.classList.remove('rounded-full');
+                        if (id === 'm-full-cover') el.classList.add('rounded-2xl');
+                        else el.classList.add('rounded-md');
+                        if(overlay) overlay.classList.remove('rounded-full');
+                    }
+                } 
+            });
+            
+            ['player-title', 'm-mini-title', 'm-full-title'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = t.title; });
+            ['player-artist', 'm-mini-artist', 'm-full-artist'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = t.artist; });
+            
+            const modeText = document.getElementById('m-full-mode-text');
+            if(modeText) modeText.textContent = t.mode === 'online' ? 'STREAMING' : 'LOCAL AUDIO';
+            
+            document.getElementById('mobile-mini-player').classList.remove('hidden');
+
+            updatePlayPauseIcons();
+            updateFavIcons();
+            updateCoverAnimation();
+        }
+
+        function updatePlayPauseIcons() {
+            const isP = AppState.isPlaying; const cls = isP ? 'ph-fill ph-pause' : 'ph-fill ph-play';
+            document.querySelector('#btn-play-pause i').className = cls + ' text-xl text-indigo-600 ' + (isP?'':'ml-1');
+            document.querySelector('#m-mini-play i').className = cls + ' text-2xl';
+            document.querySelector('#m-btn-play-pause i').className = cls + ' text-4xl text-indigo-600 ' + (isP?'':'ml-2');
+        }
+
+        function updateCoverAnimation() {
+            const covers = [document.getElementById('player-cover'), document.getElementById('m-mini-cover')];
+            covers.forEach(c => { if(c) { if(AppState.isPlaying) { c.classList.add('spin-slow'); c.classList.remove('spin-paused'); } else { c.classList.add('spin-paused'); } }});
+        }
+
+        function handleVolume(val) {
+            const v = parseFloat(val); AppState.settings.volume = v; AppState.audio.volume = v;
+            saveSettings(); updateVolumeUI();
+        }
+        function toggleMute() {
+            if (AppState.audio.volume > 0) { AppState.audio.volume = 0; document.getElementById('volume-bar').value = 0; } 
+            else { AppState.audio.volume = AppState.settings.volume || 1; document.getElementById('volume-bar').value = AppState.audio.volume; }
+            updateVolumeUI();
+        }
+        function updateVolumeUI() {
+            const v = AppState.audio.volume;
+            const fill = document.getElementById('volume-fill'); if(fill) fill.style.width = (v*100)+'%';
+            const i = document.getElementById('icon-volume');
+            if(i) {
+                if(v===0) i.className = 'ph-fill ph-speaker-none text-xl text-slate-600';
+                else if(v<0.5) i.className = 'ph-fill ph-speaker-low text-xl text-slate-300';
+                else i.className = 'ph-fill ph-speaker-high text-xl text-white';
+            }
+        }
+
+        function toggleShuffle() {
+            AppState.settings.shuffle = !AppState.settings.shuffle; saveSettings(); updateControlStyles();
+            if (AppState.settings.shuffle && AppState.queue.length > 0) doShuffleQueue(AppState.queueIndex);
+            else if (!AppState.settings.shuffle && AppState.originalQueue.length > 0) {
+                const cid = AppState.queue[AppState.queueIndex]?.id;
+                AppState.queue = [...AppState.originalQueue];
+                if(cid) AppState.queueIndex = AppState.queue.findIndex(t => t.id === cid);
+            }
+        }
+        function doShuffleQueue(keepIndex = -1) {
+            let keepMeta = keepIndex > -1 ? AppState.queue[keepIndex] : null;
+            let q = [...AppState.queue];
+            if(keepMeta) q = q.filter(t => t.id !== keepMeta.id);
+            for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; }
+            if(keepMeta) { q.unshift(keepMeta); AppState.queueIndex = 0; }
+            AppState.queue = q;
+        }
+
+        function toggleRepeat() { AppState.settings.repeat = (AppState.settings.repeat + 1) % 3; saveSettings(); updateControlStyles(); }
+
+        function updateControlStyles() {
+            const sc = AppState.settings.shuffle ? 'text-indigo-400' : 'text-slate-400 hover:text-white';
+            document.getElementById('btn-shuffle').className = `${sc} transition-colors touch-target`;
+            document.getElementById('m-btn-shuffle').className = `${sc} touch-target`;
+
+            let rc = 'ph-repeat'; let rcol = 'text-slate-400 hover:text-white';
+            if (AppState.settings.repeat === 1) rcol = 'text-indigo-400';
+            if (AppState.settings.repeat === 2) { rcol = 'text-indigo-400'; rc = 'ph-repeat-once'; }
+            
+            document.querySelector('#btn-repeat i').className = `ph ${rc} text-xl`;
+            document.getElementById('btn-repeat').className = `${rcol} transition-colors touch-target`;
+            document.querySelector('#m-btn-repeat i').className = `ph ${rc} text-2xl`;
+            document.getElementById('m-btn-repeat').className = `${rcol} touch-target`;
+        }
+
+        function toggleFavoriteId(id, encodedMeta) {
+            const meta = JSON.parse(decodeURIComponent(encodedMeta));
+            const idx = AppState.favorites.findIndex(f => f.id === id && f.mode === meta.mode);
+            if (idx > -1) { AppState.favorites.splice(idx, 1); showToast('Removed from Favorites'); } 
+            else { AppState.favorites.unshift(meta); showToast('Saved to Favorites', 'success'); }
+            saveSettings();
+            if (AppState.currentTrack && AppState.currentTrack.id === id) updateFavIcons();
+            if (AppState.currentView === 'favorites' || document.getElementById('view-container')) renderView(AppState.currentView);
+        }
+        function toggleFavoriteCurrent() {
+            if (!AppState.currentTrack) return;
+            toggleFavoriteId(AppState.currentTrack.id, encodeURIComponent(JSON.stringify(AppState.currentTrack)));
+        }
+        function updateFavIcons() {
+            const t = AppState.currentTrack; if(!t) return;
+            const isFav = AppState.favorites.some(f => f.id === t.id && f.mode === t.mode);
+            const cls = isFav ? 'ph-fill ph-heart text-rose-500' : 'ph ph-heart';
+            
+            const pb = document.getElementById('player-fav-btn');
+            pb.disabled = false;
+            pb.className = 'ml-auto transition-colors touch-target ' + (isFav ? 'text-rose-500' : 'text-slate-400 hover:text-white');
+            pb.innerHTML = `<i class="${cls} text-xl"></i>`;
+            document.getElementById('m-full-fav').innerHTML = `<i class="${cls} text-3xl"></i>`;
+            document.getElementById('m-full-fav').className = isFav ? 'text-rose-500 shrink-0 touch-target' : 'text-slate-400 hover:text-white transition-colors shrink-0 touch-target';
+        }
+
+        function openFullscreenPlayer() {
+            const p = document.getElementById('mobile-full-player');
+            p.classList.remove('hidden'); setTimeout(()=>p.classList.add('active'), 10);
+        }
+        function closeFullscreenPlayer() {
+            const p = document.getElementById('mobile-full-player');
+            p.classList.remove('active'); setTimeout(()=>p.classList.add('hidden'), 300);
+        }
+
+        function handleFeedbackSubmit(e) {
+            e.preventDefault();
+            const msg = document.getElementById('feedback-msg').value;
+            window.location.href = `mailto:aryansharma98@gmail.com,etho98g@gmail.com?subject=A.S Music Feedback&body=${encodeURIComponent(msg)}`;
+            showToast('Opening mail client...', 'info');
+            e.target.reset();
+        }
+
+        // Global Keydown Listener
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            switch (e.code) {
+                case 'Space': e.preventDefault(); togglePlayPause(); break;
+                case 'ArrowRight': if(AppState.audio.duration) AppState.audio.currentTime = Math.min(AppState.audio.currentTime + 5, AppState.audio.duration); break;
+                case 'ArrowLeft': if(AppState.audio.duration) AppState.audio.currentTime = Math.max(AppState.audio.currentTime - 5, 0); break;
+                case 'ArrowUp': e.preventDefault(); handleVolume(Math.min(AppState.audio.volume + 0.1, 1)); break;
+                case 'ArrowDown': e.preventDefault(); handleVolume(Math.max(AppState.audio.volume - 0.1, 0)); break;
+                case 'KeyN': playNext(); break;
+                case 'KeyP': playPrev(); break;
+            }
+        });
+
+        // Init
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('app-loader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => loader.remove(), 500);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            updateVolumeUI();
+            updateControlStyles();
+            
+            document.getElementById('volume-bar').value = AppState.settings.volume;
+            
+            // Auto switch mode based on nav active if needed, default is online/home
+            navigate('home');
+            updateNavHighlights();
+        });
+    </script>
+</body>
+</html>
